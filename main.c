@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <ftw.h>
 #include "sqlite3.h"
 #include "main.h"
 
@@ -31,8 +32,13 @@ void check_schma(sqlite3 *db){
 	sqlite3_exec(db, SQL_SCHEMA_CHECK, NULL, NULL, NULL);
 }
 
+int add_callback(comst char* fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
+	;
+}
 void add(char *in) {
-	;// traverse folder, and use prepared statement to add all of the folder in one transaction. TODO: insert debug macro for immediate transactions.
+	sqlite3_exec(db, "BEGIN;", NULL, NULL, NULL);
+	nftw(in, &add_callback, 10, 0);// traverse folder, and use prepared statement to add all of the folder in one transaction. TODO: insert debug macro for immediate transactions.
+	sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
 }
  
 int main(int argc, char* argv[]){
