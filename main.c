@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <ftw.h>
+#include <sys/mmap.h>
 #include "sqlite3.h"
 #include "main.h"
 
@@ -33,7 +34,14 @@ void check_schma(sqlite3 *db){
 }
 
 int add_callback(comst char* fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
-	;
+	int effective_filelength  = sb->st_size;
+	if(effective_filelength > SQLITE_MAX_LENGTH - 1) effective_filelength = SQLITE_MAX_LENGTH - 1;
+	int fd = open(fpath, O_RDONLY | O_NOATIME);
+	char * file_content = (char *) mmap(NULL, effective_filelength, PROT_READ, 0, fd, 0);
+
+	sqlite3_bind_text(stmt, 1, file_content, effective_filelength, SQLITE_STATIC);
+
+	munmap((void *) file_content, effective_filelength);
 }
 void add(char *in) {
 	sqlite3_exec(db, "BEGIN;", NULL, NULL, NULL);
