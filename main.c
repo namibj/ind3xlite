@@ -3,9 +3,18 @@
 #include <string.h>
 #include <unistd.h>
 #include <ftw.h>
-#include <sys/mmap.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "sqlite3.h"
 #include "main.h"
+
+#ifndef O_NOATIME
+#define O_NOATIME 0
+#endif
+
+void check_schema(sqlite3 *);
 
 /*//Scratchpads
 char* spad1 = malloc(sizeof(char)* 1<<20);
@@ -28,29 +37,33 @@ sqlite3* open_db(char mode){
 	*/
 	sqlite3 *ret = NULL;
 	sqlite3_open(DB_FILENAME, &ret);
+	check_schema(ret);
 	return ret;
 }
 
-void check_schma(sqlite3 *db){
+void check_schema(sqlite3 *db){
 	sqlite3_exec(db, SQL_SCHEMA_CHECK, NULL, NULL, NULL);
 }
 
-int add_callback(comst char* fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
+int add_callback(const char* fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
 	int effective_filelength  = sb->st_size;
 	if(effective_filelength > SQLITE_MAX_LENGTH - 1) effective_filelength = SQLITE_MAX_LENGTH - 1;
 	int fd = open(fpath, O_RDONLY | O_NOATIME);
-	char * file_content = (char *) mmap(NULL, effective_filelength, PROT_READ, 0, fd, 0);
+	char * file_content = (char *) mmap(NULL, effective_filelength, PROT_READ, MAP_SHARED, fd, 0);
 	sqlite3_reset(stmt);
 	sqlite3_bind_text(stmt, 1, fpath, -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 2, file_content, effective_filelength, SQLITE_STATIC);
 	while(sqlite3_step(stmt) != SQLITE_DONE);
 	munmap((void *) file_content, effective_filelength);
 	close(fd);
+	return 0;
 }
 void add(char *in) {
-	db = open_db('');
+	//stmt = malloc(sizeof(sqlite3_stmt));
+	//if(stmt == NULL) return;
+	db = open_db('\0');
 	sqlite3_exec(db, "BEGIN;", NULL, NULL, NULL);
-	sqlite3_prepare(db, "INSERT INTO files (path, content) VALUES (?, ?);", -1, &stmt, NULL)z;
+	sqlite3_prepare(db, "INSERT INTO files (path, content) VALUES (?, ?);", -1, &stmt, NULL);
 	nftw(in, &add_callback, 10, 0);// traverse folder, and use prepared statement to add all of the folder in one transaction. TODO: insert debug macro for immediate transactions.
 	sqlite3_finalize(stmt);
 	sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
