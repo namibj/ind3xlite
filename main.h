@@ -1,4 +1,4 @@
-#define MSG_NO_ARGS "Use exactly 2 arguments, the first being a command (a[dd], s[earch], r[emove]), with add and remove taking a path and either adding or removing it from the index, recursively so for directories, and the search command using the second argument to search with the FTS5 syntax from sqlite, see documentation at https://www.sqlite.org/fts5.html#full_text_query_syntax\n"
+#define MSG_NO_ARGS "Use at least 2 arguments, the first being a command (a[dd], s[earch], r[emove]), with add and remove treating the following armuments as paths and either adding or removing them from the index, recursively so for directories (performance is higher using built-in recursion), and the search command using the followig arguments to search with the FTS5 syntax from sqlite (and treating each argument as a seperate query), see documentation at https://www.sqlite.org/fts5.html#full_text_query_syntax\n"
 #ifndef DB_FILENAME
 #define DB_FILENAME ".ind3xlite.sqlite3"
 #endif

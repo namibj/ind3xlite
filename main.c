@@ -77,7 +77,7 @@ void ind3xlite_remove(char *in) {
 }
 int main(int argc, char* argv[]){
 	int action = 0;
-	if(argc != 3){
+	if(argc < 3){
 		printf(MSG_NO_ARGS);
 		return -1;
 	}else{
@@ -89,13 +89,16 @@ int main(int argc, char* argv[]){
 		else if(!strcmp(argv[1], "r"))      action = 2;
 	switch(action){
 		case 1:
-			add(argv[2]);
+			for (int i = 2; i < argc; i++)
+				add(argv[i]);
 			break;
 		case 2:
-			search(argv[2]);
+			for (int i = 2; i < argc; i++)
+				search(argv[i]);
 			break;
 		case 3:
-			ind3xlite_remove(argv[2]);
+			for (int i = 2; i < argc; i++)
+				ind3xlite_remove(argv[i]);
 			break;
 		default:
 			printf(MSG_NO_ARGS);
