@@ -2,5 +2,5 @@
 #ifndef DB_FILENAME
 #define DB_FILENAME ".ind3xlite.sqlite3"
 #endif
-#define SQL_SCHEMA_CHECK "CASE WHEN NOT EXISTS (SELECT 1 FROM sqlite_master WHERE type = \"table\" AND name = \"files\") THEN	CREATE VIRTUAL TABLE files USING fts5(path, content, prefix='3 5 7');"
+#define SQL_SCHEMA_CHECK "CREATE VIRTUAL TABLE IF NOT EXISTS files USING fts5(path, content, prefix='3 5 7');"
 
