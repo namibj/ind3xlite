@@ -16,25 +16,9 @@
 
 void check_schema(sqlite3 *);
 
-/*//Scratchpads
-char* spad1 = malloc(sizeof(char)* 1<<20);
-char* spad2 = malloc(sizeof(char)* 1<<20);*/
 sqlite3_stmt* stmt = NULL;
 sqlite3* db = NULL;
 sqlite3* open_db(char mode){
-	/*FILE* db = malloc(sizeof(FILE));
-	bool root = false;
-	int i = 0;
-	do{
-		memcpy(&(spad1[i]
-		db = fopen(
-		spad1[i++] = '.';
-		spad1[i++] = '.';
-		spad1[i++] = '/';
-		spad1[i] = '\0';
-		realpath(spad1, spad2);
-		if(spad2[1] == '\0') root = true;
-	*/
 	sqlite3 *ret = NULL;
 	sqlite3_open(DB_FILENAME, &ret);
 	check_schema(ret);
@@ -60,8 +44,6 @@ int add_callback(const char* fpath, const struct stat *sb, int typeflag, struct 
 	return 0;
 }
 void add(char *in) {
-	//stmt = malloc(sizeof(sqlite3_stmt));
-	//if(stmt == NULL) return;
 	db = open_db('\0');
 	sqlite3_exec(db, "BEGIN;", NULL, NULL, NULL);
 	sqlite3_prepare(db, "INSERT INTO files (path, content) VALUES (?, ?);", -1, &stmt, NULL);
@@ -79,17 +61,31 @@ void search(char *in) {
 	return;
 }
 int main(int argc, char* argv[]){
+	int action = 0;
 	if(argc != 3){
 		printf(MSG_NO_ARGS);
 		return -1;
 	}else{
-		if (!strcmp(argv[1], "add")) 
+		if (!strcmp(argv[1], "add"))        action = 1;
+		else if(!strcmp(argv[1], "a"))      action = 1;
+		else if(!strcmp(argv[1], "search")) action = 2;
+		else if(!strcmp(argv[1], "s"))      action = 2;
+		else if(!strcmp(argv[1], "remove")) action = 2;
+		else if(!strcmp(argv[1], "r"))      action = 2;
+	switch(action){
+		case 1:
 			add(argv[2]);
-		else if(!strcmp(argv[1], "a"))
-			add(argv[2]);
-		else if(!strcmp(argv[1], "s"))
+			break;
+		case 2:
 			search(argv[2]);
-		else printf("1st argument is\"%s\"", argv[1]);
+			break;
+		case 3:
+			printf("Removing is not yet supported");
+			break;
+		default:
+			printf(MSG_NO_ARGS);
+			return -1;
+	}
 		return 0;
 	}
 }
