@@ -60,6 +60,21 @@ void search(char *in) {
 	sqlite3_finalize(stmt);
 	return;
 }
+int remove_callback(const char* fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
+	if(typeflag != FTW_F) return 0;
+	sqlite3_reset(stmt);
+	sqlite3_bind_text(stmt, 1, fpath, -1, SQLITE_STATIC);
+	while(sqlite3_step(stmt) != SQLITE_DONE);
+	return 0;
+}
+void ind3xlite_remove(char *in) {
+	db = open_db('\0');
+	sqlite3_exec(db, "BEGIN;", NULL, NULL, NULL);
+	sqlite3_prepare(db, "DELETE FROM files WHERE path = ?;", -1, &stmt, NULL);
+	nftw(in, &remove_callback, 10, 0);
+	sqlite3_finalize(stmt);
+	sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
+}
 int main(int argc, char* argv[]){
 	int action = 0;
 	if(argc != 3){
@@ -80,7 +95,7 @@ int main(int argc, char* argv[]){
 			search(argv[2]);
 			break;
 		case 3:
-			printf("Removing is not yet supported");
+			ind3xlite_remove(argv[2]);
 			break;
 		default:
 			printf(MSG_NO_ARGS);
