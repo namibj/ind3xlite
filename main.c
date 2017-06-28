@@ -46,6 +46,7 @@ void check_schema(sqlite3 *db){
 }
 
 int add_callback(const char* fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
+	if(typeflag != FTW_F) return 0;
 	int effective_filelength  = sb->st_size;
 	if(effective_filelength > SQLITE_MAX_LENGTH - 1) effective_filelength = SQLITE_MAX_LENGTH - 1;
 	int fd = open(fpath, O_RDONLY | O_NOATIME);
@@ -68,7 +69,15 @@ void add(char *in) {
 	sqlite3_finalize(stmt);
 	sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
 }
- 
+void search(char *in) {
+	db = open_db('\0');
+	sqlite3_prepare(db, "SELECT '\n' || path || '\t' || snippet(files, 1, '\033[1m', '\033[0m', '\e[3m$\033[0m', 64) FROM files WHERE files MATCH ? ORDER BY rank;", -1, &stmt, NULL);
+	sqlite3_bind_text(stmt, 1, in, -1, SQLITE_STATIC);
+	while(sqlite3_step(stmt) == SQLITE_ROW)
+		printf("%s", sqlite3_column_text(stmt, 0));
+	sqlite3_finalize(stmt);
+	return;
+}
 int main(int argc, char* argv[]){
 	if(argc != 3){
 		printf(MSG_NO_ARGS);
@@ -77,9 +86,10 @@ int main(int argc, char* argv[]){
 		if (!strcmp(argv[1], "add")) 
 			add(argv[2]);
 		else if(!strcmp(argv[1], "a"))
-			add(argv[2]); 
+			add(argv[2]);
+		else if(!strcmp(argv[1], "s"))
+			search(argv[2]);
 		else printf("1st argument is\"%s\"", argv[1]);
-		printf("Hi! %i\n", argc);
 		return 0;
 	}
 }
